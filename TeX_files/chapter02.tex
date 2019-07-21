@@ -1,38 +1,23 @@
 \chapter{The models}
-In this chapter we discuss several neural network classifiers and their results on the Forest Cover Type dataset.
+In this chapter we discuss several neural network classifiers and their results on our dataset.
 \section{Baseline model}
 \label{sec:baselinemodel}
-We decided to start with an adaptation of the \textit{optimal} model's architecture outlined in \cite{blackardDean} and reported in Figure \ref{fig:baselinemodel}. The model is made of 51 input nodes, 120 hidden nodes and seven output nodes (symbolized as baseline-51-120-7) where each layer is fully connected. Both the hidden and output layers utilized the logistic (sigmoid) activation function:
+We decided to start with an adaptation of the \textit{optimal} model's architecture outlined in \cite{blackardDean} and reported in Figure \ref{fig:baselinemodel}. The model is made of 51 input nodes, 120 hidden nodes and seven output nodes (symbolized as baseline-51-120-7) where each layer is fully connected. Both the hidden and output layers utilized the logistic (sigmoid) activation functions:
 $$
-\sigma(a) = \frac{1}{1 + e^{-a}}.
+\sigma(a) = \frac{1}{1 + e^{-a}}\text{.}
 $$
-The 51 input features are obtained from the 54 initial ones by using <<Distance\_To\_Hydrology>> feature as described in Section \ref{sec:feat_eng} and by dropping <<Aspect>> and <<Slope>> features since the Hillshade ones, according to their definition, vary depending on a factor
+The 51 input features are obtained from the 54 initial ones by using <<Distance\_To\_Hydrology>> feature as described in Section \ref{sec:feat_eng} and by dropping <<Aspect>> and <<Slope>> features since the hillshade ones, according to their definition, vary depending on a factor
 \begin{equation}
 \begin{aligned}
 \alpha&=\cos(Slope)\cdot \cos(90-Altitude)+ \\
-& +\sin(Slope) \cdot \sin(90-Altitude)\cdot \cos(Azimuth-Aspect).
+& +\sin(Slope) \cdot \sin(90-Altitude)\cdot \cos(Azimuth-Aspect)\text{,}
 \end{aligned}
 \end{equation}
-Given the training set size, we picked SGD (Stochastic Gradient Descent) as loss function optimizer, while the loss function is the classic MSE (Mean Squared Error, as in \cite{blackardDean}):
+that already contains the same information the dropped features carry. The dropped features were left behind because their presence made the tested machines (the only difference was in the input layer, since its dimension must be changed according to the dimension of the feature space) perform worse. We picked SGD (Stochastic Gradient Descent) as loss function optimizer, while the loss function is the classic MSE (Mean Squared Error, as in \cite{blackardDean}):
 \begin{equation}
 \text{MSE} = \frac{1}{N}\sum_{i=1}^{N}(Y_i - Y^{*}_{i})^2
 \end{equation}
-where $Y_i$ is the vector of the true values of the target, $Y^{*}_{i}$ is the model's prediction and $N$ is the number of samples. After running a grid-search algorithm over a set of hyperparameters, the best model was found (learning rate (LR) to $0.05$, batch size to $128$ and number of epochs to $200$): the classifier has then been trained via a 10-fold cross-validation. The accuracy on the training set and validation set is shown in Figure \ref{fig:baselinemodelacc} while the losses in Figure \ref{fig:baselinemodelloss}: to smooth the plots, we plot the metric value at the last epoch of each fold. Given the multi-class nature of the classification task, Figure \ref{fig:baselineconfmatheatmap} represent the heat-map rendering of the classification matrix to better convey the information regarding the correctly classified/misclassified samples: it is easy to notice that $532$ samples, of the total $587$ in the test set, belonging to the minority class (Cottonwood/Willow) are correctly classified; $5\,285$ are misclassified as the minority class but they belong to Ponderosa Pine. Moreover, a good amount of Spruce/Fir samples are correctly classified (this should be expected since this class is one of the majority classes). Other useful performance metrics for imbalanced class problems are precision (PRE), recall (REC) and F1-score (F1):
-\begin{equation}
-\begin{aligned}
-\text{PRE} &= \frac{TP}{TP+FP}, \\
-\text{REC} &= \frac{TP}{FN+TP}, \\
-\text{F1} &= 2 \cdot \frac{\text{PRE} \cdot \text{REC}}{\text{PRE} + \text{REC}},
-\end{aligned}
-\end{equation}
-where $TP$ stands for True Positive, $FP$ for False Positive and $FN$ for False Negative. Table \ref{tab:baselineclassificationrep} summarises each metric for all $7$ classes: as expected, the first minority class Cottonwood/Willow exhibits high recall ($\sim90.63\%$) and very low precision ($\sim6.95\%$) which means that the classifier is giving a lot of positive predictions while being wrong most of the times (the classifier confuses quite often samples belonging to other classes as samples belonging to this class); the second minority class Aspen is pretty much the same, high recall ($\sim71.96\%$) and low precision ($\sim6.63\%$). For the majority class Spruce/Fir the classification looks quite reasonable (recall $\sim64.75\%$, precision $\sim66.37\%$), mainly because the class represents a huge part of the dataset. In fact, during the validation phase, the model having highest accuracy is picked and this will necessarily involve a high recall value for the aforementioned class. Finally, the weighted avg column represent a weighted average of each precision metric where the weights are the support value for each class. For example, the weighted avg of the precision column is calculated as Eq. \ref{eq:weighavgprec}:
-\begin{equation}
-\label{eq:weighavgprec}
-\begin{aligned}
-&\frac{(209679)0.6637 + (281141)0.7898 + (33594)0.6497+(587)0.0695}{565892}+ \\
-&+\frac{(7333)0.0663 + (15207)0.2611 + (18350)0.3569}{565892} \approx 0.6964.
-\end{aligned}
-\end{equation}
+where $Y_i$ is the vector of the true values of the target, $Y^{*}_{i}$ is the model's prediction and $N$ is the number of samples. After running a grid-search algorithm over a set of hyperparameters, the best model was found (learning rate to $0.05$, batch size to $128$ and number of epochs to $200$): the classifier has then been trained via a 10-fold cross-validation. The accuracy on the train set and the validation set is shown in Figure \ref{fig:baselinemodelacc} while the losses in Figure \ref{fig:baselinemodelloss}: to smooth the plots, the last metric value for each fold has been taken into account.
 \begin{figure}
 \centering
 \includegraphics[width=0.7\textwidth]{./TeX_files/img/baselinemodel.png}
@@ -53,14 +38,28 @@ where $TP$ stands for True Positive, $FP$ for False Positive and $FN$ for False 
 \caption{Baseline model losses.}
 \label{fig:baselinemodelloss}
 \end{figure}
-
+Given the multi-class nature of the classification task, Figure \ref{fig:baselineconfmatheatmap} represent the heat-map rendering of the classification matrix to better convey the information regarding the correctly classified/misclassified samples: it is easy to notice that $532$ samples, of the total $587$ in the test set, belonging to the minority class (Cottonwood/Willow) are correctly classified; $5285$ are misclassified as the minority class but they belong to Ponderosa Pine. Moreover, a good amount of Spruce/Fir samples are correctly classified (this should be expected since this class is one of the majority classes). Other useful performance metrics for imbalanced class problems are precision (PRE), recall (REC) and F1-score (F1):
+\begin{equation}
+\begin{aligned}
+\text{PRE} &= \frac{TP}{TP+FP}\text{,} \\
+\text{REC} &= \frac{TP}{FN+TP}\text{,} \\
+\text{F1} &= 2 \cdot \frac{\text{PRE} \cdot \text{REC}}{\text{PRE} + \text{REC}}\text{,}
+\end{aligned}
+\end{equation}
+where $TP$ stands for True Positive, $FP$ for False Positive and $FN$ for False Negative. According to these definitions, Table \ref{tab:baselineclassificationrep} summarises each metric for all $7$ classes: as expected, the first minority class Cottonwood/Willow exhibits high recall ($\sim90.63\%$) and very low precision ($\sim6.95\%$) which means that the classifier is giving a lot of positive predictions while being wrong most of the times (the classifier confuses quite often samples belonging to other classes as samples belonging to this class); the second minority class Aspen is pretty much the same, high recall ($\sim71.96\%$) and low precision ($\sim6.63\%$). For the majority class Spruce/Fir the classification looks quite reasonable (recall $\sim64.75\%$, precision $\sim66.37\%$), mainly because the class represents a huge part of the dataset. In fact, during the validation phase, the model having highest accuracy is picked and this will necessarily involve a high recall value for the aforementioned class. Finally, the weighted avg column represent a weighted average of each precision metric where the weights are the support value for each class. For example, the weighted avg of the precision column is calculated as Equation \ref{eq:weighavgprec}:
+\begin{equation}
+\label{eq:weighavgprec}
+\begin{aligned}
+&\frac{(209679)0.6637 + (281141)0.7898 + (33594)0.6497+(587)0.0695}{565892}+ \\
+&+\frac{(7333)0.0663 + (15207)0.2611 + (18350)0.3569}{565892} \approx 0.6964.
+\end{aligned}
+\end{equation}
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{./TeX_files/img/baselineconfmatheatmap.png}
 \caption{Heat-map rendering of the confusion matrix for the baseline model.}
 \label{fig:baselineconfmatheatmap}
 \end{figure}
-
 % La tabella va aggiustata come in 
 % https://tex.stackexchange.com/questions/2441/how-to-add-a-forced-line-break-inside-a-table-cell
 \begin{table}
@@ -68,8 +67,8 @@ where $TP$ stands for True Positive, $FP$ for False Positive and $FN$ for False 
 \resizebox{0.9\textwidth}{!}{
 \begin{tabular}{ccccc}
 & precision & recall & f1-score & support \\ \hline
-Spruce/Fir        & 0.6637    & 0.6475 & 0.6555   & 209680  \\ \hline
-Lodgepole Pine    & 0.7898    & 0.4675 & 0.5873   & 281141  \\ \hline
+Spruce/Fir        & 0.6637    & 0.6475 & 0.6555   & 209679  \\ \hline
+Lodgepole Pine    & 0.7898    & 0.4675 & 0.5873   & 281142  \\ \hline
 Ponderosa Pine    & 0.6497    & 0.5663 & 0.6051   & 33594   \\ \hline
 Cottonwood/Willow & 0.0695    & 0.9063 & 0.1291   & 587     \\ \hline
 Aspen             & 0.0663    & 0.7196 & 0.1215   & 7333    \\ \hline
@@ -82,9 +81,8 @@ test set accuracy          & 0.5598    & 0.5598 & 0.5598   & 0.5598  \\ \hline
 \caption{Precision, recall, f1-score summary table for the baseline model. Support indicates the number of occurrences of each particular class in the true responses (for the test set). Weighted avg is the per metric weighted average where the weights correspond to the support of that class.}
 \label{tab:baselineclassificationrep}
 \end{table}
-
 \section{Proposed models}
-Inspired by what we have seen so far, we tried to come up with possible good classifiers while trying to \textit{keep it simple}. Section \ref{sec:onehidden} goes through a model similar to the baseline of Section \ref{sec:baselinemodel}. Section \ref{sec:twohidden} present a completely different model based on our intuition of neural networks.
+Inspired by what we have seen so far, we tried to come up with possible good classifiers while trying to keep it simple. Section \ref{sec:onehidden} goes through a model similar to the baseline of Section \ref{sec:baselinemodel}. Section \ref{sec:twohidden} present a completely different model based on our intuition of neural networks.
 \subsection{One hidden layer network}
 \label{sec:onehidden}
 The model is made of 51 input nodes, 120 hidden nodes and seven output nodes (symbolized as onehidden-51-120-7) where each layer is fully connected (same architecture as Figure \ref{fig:baselinemodel}). The hidden layer activation function is the ReLU:
@@ -93,36 +91,33 @@ The model is made of 51 input nodes, 120 hidden nodes and seven output nodes (sy
 \end{equation}
 The output layer activation function is the softmax:
 \begin{equation}
-\text{Softmax}(a)_j = \frac{\exp(a_j)}{\sum_{c=1}^{C} \exp(a_c)}, \; j = 1,2,\dots,C.
+\text{Softmax}(a)_j = \frac{\exp(a_j)}{\sum_{c=1}^{C} \exp(a_c)}, \; j = 1,2,\dots,C 
 \end{equation}
 where $C$ is the number of classes ($C=7$ for our classification task). The loss function optimizer is again SGD and the loss function is the Cross Entropy:
 \begin{equation}
 \begin{aligned}
-\text{CE} = - \frac{1}{N} \sum_{i=1}^{N}\sum_{c=1}^{C} [y_i = c] \log p_{model}(y_i = c)
+- \frac{1}{N} \sum_{i=1}^{N}\sum_{c=1}^{C} [y_i = c] \log p_{model}(y_i = c)
 \end{aligned}
 \end{equation}
-where N is the number of samples, C the number of classes, $p_{model}(y_i = c)$ the probability predicted by the model for the $i$-th sample of belonging to the $c$-th class. After running a grid-search algorithm over a set of hyperparameters, the best model was found (learning rate to $0.5$, batch size to $128$ and number of epochs to $100$): the classifier has then been trained via a 10-fold cross-validation. The accuracy on the training set and the validation set is shown in Figure \ref{fig:onehiddenmodelacc} while the losses in Figure \ref{fig:onehiddenmodelloss}. It is easy to notice a slight improvement compared to the baseline. Figure \ref{fig:onehiddenconfmatheatmap} and Table \ref{tab:onehiddenclassificationrep} confirm that the learning process has improved: only $32$ over $587$ samples of Cottonwood/Willow are misclassified; $15\,774$ samples are classified as Aspen but they belong to Lodgepole Pine which, compared to the baseline, is an improvement of $\sim3.8$ times (namely, $15\,774$ against $59\,154$). It is quite clear that this model trains faster than the baseline and performs way better.
+where N is the number of samples, C the number of classes, $p_{model}(y_i = c)$ the probability, predicted by the model for the $i$-th sample, of belonging to the $c$-th class. After running a grid-search algorithm over a set of hyperparameters, the best model was found (learning rate to $0.5$, batch size to $128$ and number of epochs to $100$): the classifier has then been trained via a 10-fold cross-validation. The accuracy on the train set and the validation set is shown in Figure \ref{fig:onehiddenmodelacc} while the losses in Figure \ref{fig:onehiddenmodelloss}. It is easy to notice a slight improvement compared to the baseline. Figure \ref{fig:onehiddenconfmatheatmap} and Table \ref{tab:onehiddenclassificationrep} confirm that the learning process has improved: only $32$ over $587$ samples of Cottonwood/Willow are misclassified; $15774$ samples are classified as Aspen but they belong to Lodgepole Pine which, compared to the baseline, is an improvement of $\sim3.8$ times (namely, $15774$ against $59154$). It is quite clear that this model trains faster than the baseline and performs way better.
 \begin{figure}
 \centering
 \includegraphics[width=0.7\textwidth]{./TeX_files/img/onehiddenmodelacc.png}
 \caption{One hidden model accuracy.}
 \label{fig:onehiddenmodelacc}
 \end{figure}
-
 \begin{figure}
 \centering
 \includegraphics[width=0.7\textwidth]{./TeX_files/img/onehiddenmodelloss.png}
 \caption{One hidden model losses.}
 \label{fig:onehiddenmodelloss}
 \end{figure}
-
 \begin{figure}
 \centering
 \includegraphics[width=\textwidth]{./TeX_files/img/onehiddenconfmatheatmap.png}
 \caption{Heat-map rendering of the confusion matrix for the one hidden layer model.}
 \label{fig:onehiddenconfmatheatmap}
 \end{figure}
-
 \begin{table}
 \centering
 \resizebox{0.9\textwidth}{!}{
@@ -144,8 +139,8 @@ test set accuracy          & 0.7323    & 0.7323 & 0.7323   & 0.7323  \\ \hline
 \end{table}
 \subsection{Two hidden layers network}
 \label{sec:twohidden}
-Based on our experience with the Forest Cover Type dataset we came up with a different architecture shown in Figure \ref{fig:twohiddenmodel}. This model consists of 51 input nodes, 2 hidden layers (the first one made of 30 nodes while the second one of 15 nodes) and seven nodes for the output layer; each layer is fully connected, as usual. Both hidden layer activation functions are ReLU and the output layer activation function is, again, the softmax. The loss function optimizer and the loss function are equal to the one hidden layer model.
-After running a grid-search algorithm over a set of hyperparameters, the best model was found (learning rate to $0.3$, batch size to $128$ and number of epochs to $100$): the classifier has then been trained via a 10-fold cross-validation. The accuracy on the training set and the validation set is shown in Figure \ref{fig:twohiddenmodelacc} while the losses in Figure \ref{fig:twohiddenmodelloss}. Even though the network performs slightly worse than onehidden-51-120-7, it has $2085$ edges (vs $6960$) thus the computational burden is less heavy (\textit{Parsimony principle}\cite{gori}).
+Based on our experience with the Forest Cover Type dataset we came up with a different architecture shown in Figure \ref{fig:twohiddenmodel}. This model consists of 51 input nodes, 2 hidden layers (the first one made of 30 nodes while the second one of 15 nodes) and seven nodes for the output layer; each layer is fully connected, as usual. Both hidden layers activation functions are ReLU and the output layer is, again, the softmax. The loss function optimizer and the loss function are equal to the one hidden layer model.
+After running a grid-search algorithm over a set of hyperparameters, the best model was found (learning rate to $0.3$, batch size to $128$ and number of epochs to $100$): the classifier has then been trained via a 10-fold cross-validation. The accuracy on the train set and the validation set is shown in Figure \ref{fig:twohiddenmodelacc} while the losses in Figure \ref{fig:twohiddenmodelloss}. Even though the network performs slightly worse than onehidden-51-120-7, it has $2085$ edges (vs $6960$) thus the computational burden is less heavy (\textit{Parsimony principle}\cite{gori}).
 \begin{figure}
 \centering
 \includegraphics[width=0.7\textwidth]{./TeX_files/img/twohiddenmodel.png}
@@ -193,3 +188,86 @@ test set accuracy          & 0.7019    & 0.7019 & 0.7019   & 0.7019      \\ \hli
 \caption{Precision, recall, f1-score summary table for the two hidden layers model.}
 \label{tab:twohiddenclassificationrep}
 \end{table}
+
+\newpage
+\subsection{Varying the previous models}
+Since removing superfluous features allowed the machine to perform better, we decided to try to execute the feature selection in a more automized way. We modified the models seen in sections \ref{sec:onehidden} and \ref{sec:twohidden} by adding two hidden layers before the first hidden layer of each of the previous models. The first of two new hidden layers has $\nu<\text{51}$ hidden nodes, while the second has 51 inspired by the autoencoder's scheme in Figure \ref{fig:autoencoder}.
+\begin{figure}
+\centering
+\includegraphics[width=0.45\textwidth]{./TeX_files/img/autoenc.eps}
+\caption{Autoencoder's scheme}
+\label{fig:autoencoder}
+\end{figure}
+The one of autoencoders is a class of neural networks generally trained using as labels the training set itself, with the hope that the machine will learn an underlying set of rules that allows it to create a simplified representation of the data. The bottleneck in the hidden layers of an autoencoder allows the data to be represented in a low dimensionality space that can then be used to reconstruct the input data after the bottleneck. 
+
+The reason why we tried these schemes is that we hope to get a similar effect, except for the fact that we aren't interested in reconstructing the input data, but we want to use the bottleneck for an automated feature reduction. Running a grid-search algorithm over set of possible $\nu$ values we picked the possible substitutes for the previous networks. Moreover, we also noticed that, when using these networks, the loss in training and validation phase reches very quickly a good value and then starts oscillating around it. Thus, we tried to change the rate between training and test set in the 10-fold cross validation algorithm to $60\%$ instead of $75\%$ as another measure to avoid overfitting.
+\subsubsection{onehidden\_red-51-49-51-120-7 instead of onehidden-51-120-7}
+During the training of this network the same learning rate as for onehidden-51-120-7 was used. 
+\begin{table}[H]
+\centering
+\resizebox{0.9\textwidth}{!}{
+\begin{tabular}{ccccc}
+                  & precision & recall & f1-score & support \\ \hline
+Spruce/Fir        & 0.7503    & 0.7708 & 0.7604   & 209680  \\ \hline
+Lodgepole Pine    & 0.8482    & 0.6837 & 0.7571   & 281141  \\ \hline
+Ponderosa Pine    & 0.7880    & 0.8498 & 0.8177   & 33594   \\ \hline
+Cottonwood/Willow & 0.2351    & 0.9625 & 0.3779   & 587     \\ \hline
+Aspen             & 0.2199    & 0.9399 & 0.3564   & 7333    \\ \hline
+Douglas-fir       & 0.5564    & 0.8712 & 0.6791   & 15207   \\ \hline
+Krummholz         & 0.5867    & 0.9617 & 0.7288   & 18350   \\ \hline
+weighted avg      & 0.7833    & 0.7435 & 0.7533   & 565892  \\ \hline
+test set accuracy          & 0.7435    & 0.7435 & 0.7435   & 0.7435  \\ \hline
+\end{tabular}
+}
+\caption{Precision, recall, f1-score summary table for onehidden\_red-51-46-51-120-7.}
+\end{table}
+
+\begin{figure} [H]
+\centering
+\includegraphics[width=0.7\textwidth]{./TeX_files/img/m1_auto_loss.png}
+\caption{onehidden\_red-51-49-51-120-7 model losses.}
+\label{fig:m1automodelloss}
+\end{figure}
+
+\begin{figure} [H]
+\centering
+\includegraphics[width=0.7\textwidth]{./TeX_files/img/m1_auto_acc.png}
+\caption{onehidden\_red-51-49-51-120-7 model accuracy.}
+\label{fig:m1automodelacc}
+\end{figure}
+
+\subsubsection{twohidden\_red-51-46-51-30-15-7 instead of twohidden-51-30-15-7}
+This network performs better ($\sim +3.4\%$ of accuracy) than the twohidden-51-30-15-7 seen in Section \ref{sec:twohidden}, but in this case the best learning rate for the model (according to the grid-search algorithm) is 0.5 (instead of 0.3).
+
+\begin{table}[H]
+\centering
+\resizebox{0.9\textwidth}{!}{
+\begin{tabular}{ccccc}
+                  & precision & recall & f1-score & support \\ \hline
+Spruce/Fir        & 0.7606    & 0.7098 & 0.7343   & 209680  \\ \hline
+Lodgepole Pine    & 0.8092    & 0.7182 & 0.7610   & 281141  \\ \hline
+Ponderosa Pine    & 0.7843    & 0.8386 & 0.8105   & 33594   \\ \hline
+Cottonwood/Willow & 0.2228    & 0.9642 & 0.3620   & 587     \\ \hline
+Aspen             & 0.2455    & 0.9183 & 0.3874   & 7333    \\ \hline
+Douglas-fir       & 0.5107    & 0.8369 & 0.6343   & 15207   \\ \hline
+Krummholz         & 0.5834    & 0.9495 & 0.7227   & 18350   \\ \hline
+weighted avg      & 0.7664    & 0.7358 & 0.7441   & 565892  \\ \hline
+test set accuracy & 0.7358    & 0.7358 & 0.7358   & 0.7358  \\ \hline
+\end{tabular}
+}
+\caption{Precision, recall, f1-score summary table for twohidden\_red-51-46-51-30-15-7.}
+\end{table}
+
+\begin{figure} [H]
+\centering
+\includegraphics[width=0.7\textwidth]{./TeX_files/img/m2_auto_loss.png}
+\caption{twohidden\_red-51-46-51-30-15-7 model losses.}
+\label{fig:m2automodelloss}
+\end{figure}
+
+\begin{figure} [H]
+\centering
+\includegraphics[width=0.7\textwidth]{./TeX_files/img/m2_auto_acc.png}
+\caption{twohidden\_red-51-46-51-30-15-7 model accuracy.}
+\label{fig:m2automodelacc}
+\end{figure}
